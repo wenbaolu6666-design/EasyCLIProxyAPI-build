@@ -30,6 +30,7 @@ on:
   push:
     branches:
       - preview
+      - test
     tags:
       - 'v*'
       - 'only-preview'
