@@ -1,0 +1,17 @@
+name: Test build
+
+on:
+  push:
+    branches:
+      - test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/release.yml
+    with:
+      preview: false
+      source_sha: ${{ github.sha }}
