@@ -24,7 +24,6 @@ export function PluginOAuthProviders({ builtInProviderIds, browser = 'default', 
   const privacy = usePrivacyMask();
   const [plugins, setPlugins] = useState<PluginListEntry[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [completed, setCompleted] = useState<Set<string>>(() => new Set());
   const [accounts, setAccounts] = useState<Map<string, OAuthAccountSummary[]> | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -109,7 +108,6 @@ export function PluginOAuthProviders({ builtInProviderIds, browser = 'default', 
     }>{pluginOAuthText('loadFailed', locale)}</Notice>}
     {plugins.map(plugin => {
       const provider = plugin.oauthProvider!;
-      const authorized = completed.has(provider);
       const providerAccounts = accounts?.get(normalizeOAuthProvider(provider)) ?? [];
       const hasAccounts = providerAccounts.length > 0;
       return <section className="panel surface-panel oauth-card" key={provider}>
@@ -131,8 +129,6 @@ export function PluginOAuthProviders({ builtInProviderIds, browser = 'default', 
                   : t('oauth.accounts.count', { count: providerAccounts.length })}
                 {onOpenAuthFiles ? <ChevronRight size={13} aria-hidden="true" /> : null}
               </button>
-            ) : authorized ? (
-              <span className="state-pill success">{t('oauth.status.completed')}</span>
             ) : (
               <span className="oauth-account-count">{t('oauth.accounts.none')}</span>
             )}
@@ -162,7 +158,7 @@ export function PluginOAuthProviders({ builtInProviderIds, browser = 'default', 
         </div>
         <div className="button-row management-card-actions">
           <button type="button" className="primary-button" onClick={() => setSelectedProvider(provider)}>
-            <LogIn size={16} aria-hidden="true" />{t(hasAccounts || authorized ? 'oauth.addAccount' : 'oauth.signIn')}
+            <LogIn size={16} aria-hidden="true" />{t(hasAccounts ? 'oauth.addAccount' : 'oauth.signIn')}
           </button>
         </div>
       </section>;
@@ -173,7 +169,6 @@ export function PluginOAuthProviders({ builtInProviderIds, browser = 'default', 
       browser={browser}
       onClose={() => setSelectedProvider(null)}
       onCompleted={() => {
-        setCompleted(previous => new Set(previous).add(selectedPlugin.oauthProvider!));
         void loadAccounts();
         window.setTimeout(() => { void loadAccounts(); }, 800);
       }}
