@@ -44,12 +44,17 @@ export function CoreHealthPanel({
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      controllerRef.current?.abort();
+      const controller = controllerRef.current;
+      controllerRef.current = null;
+      controller?.abort();
     };
   }, []);
 
   useEffect(() => {
-    controllerRef.current?.abort();
+    const controller = controllerRef.current;
+    controllerRef.current = null;
+    controller?.abort();
+    setRunning(false);
     setResults({});
     setPending(new Set());
     setActive(new Set());
@@ -68,33 +73,49 @@ export function CoreHealthPanel({
     setActive(new Set());
     try {
       await checkCoreModelsHealth(targets, (result) => {
-        if (!mountedRef.current || controller.signal.aborted) return;
+        if (!mountedRef.current || controller.signal.aborted || controllerRef.current !== controller) return;
         setResults((current) => ({ ...current, [result.model]: { ...result, checkedAt: Date.now() } }));
         setPending((current) => { const next = new Set(current); next.delete(result.model); return next; });
         setActive((current) => { const next = new Set(current); next.delete(result.model); return next; });
         setProgress((current) => ({ ...current, done: current.done + 1 }));
       }, controller.signal, (model) => {
-        if (!controller.signal.aborted) setActive((current) => new Set(current).add(model.name));
+        if (!mountedRef.current || controller.signal.aborted || controllerRef.current !== controller) return;
+        setActive((current) => new Set(current).add(model.name));
       });
     } finally {
-      if (controllerRef.current === controller) controllerRef.current = null;
-      if (mountedRef.current) {
-        setRunning(false);
-        setPending(new Set());
-        setActive(new Set());
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+        if (mountedRef.current) {
+          setRunning(false);
+          setPending(new Set());
+          setActive(new Set());
+        }
       }
     }
   }, [canCheck, open]);
 
   const stopChecks = () => {
-    controllerRef.current?.abort();
+    const controller = controllerRef.current;
+    controllerRef.current = null;
+    controller?.abort();
+    setRunning(false);
     setStopped(true);
     setPending(new Set());
     setActive(new Set());
   };
 
+  // 点击关闭弹窗时停止后续检测并重置本次结果与状态，下次打开恢复未检测状态
   const close = () => {
-    if (controllerRef.current) stopChecks();
+    const controller = controllerRef.current;
+    controllerRef.current = null;
+    controller?.abort();
+    setRunning(false);
+    setStopped(false);
+    setResults({});
+    setPending(new Set());
+    setActive(new Set());
+    setProgress({ done: 0, total: 0 });
+    setSearch('');
     setOpen(false);
   };
 
