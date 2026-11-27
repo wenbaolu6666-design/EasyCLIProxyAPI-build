@@ -239,6 +239,16 @@ const base = process.env.HOME_DASHBOARD_TEST_BASE_URL || 'http://127.0.0.1:1421'
     assert.equal((await probes(page)).length, 5, 'closing must not launch queued model requests');
     assert.equal(await page.locator('.core-health-status.healthy').count(), 1, 'closing must keep completed results and discard late results');
 
+    // Non-core external agent config changes must not interrupt or reset open health checks.
+    await open();
+    await page.evaluate(() => { window.homeFixture.holdProbes = true; });
+    await checkAll(page).click();
+    await page.waitForFunction(() => window.homeFixture.probeReleases.length === 4);
+    await page.evaluate(() => window.homeFixture.changeAgentConfig());
+    await page.evaluate(() => window.homeFixture.releaseProbes());
+    await page.waitForFunction(() => document.querySelectorAll('.core-health-status.healthy').length === 6);
+    assert.equal((await probes(page)).length, 6, 'external agent config changes must not abort health checks');
+
     await open();
     await page.evaluate(() => { window.homeFixture.holdProbes = true; });
     await checkAll(page).click();
