@@ -107,8 +107,10 @@ export function CoreHealthPanel({
     setStopped(true);
   };
 
+  // 点击关闭弹窗时停止后续检测并重置本次结果与状态，下次打开恢复未检测状态
   const close = () => {
-    if (controllerRef.current) stopChecks();
+    resetChecks();
+    setSearch('');
     setOpen(false);
   };
 

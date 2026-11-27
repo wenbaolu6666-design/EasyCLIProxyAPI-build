@@ -186,7 +186,7 @@ const base = process.env.HOME_DASHBOARD_TEST_BASE_URL || 'http://127.0.0.1:1421'
     assert.equal(await page.locator('.core-health-open').evaluate(node => node === document.activeElement), true, 'Escape must restore focus to the entry');
     assert.notEqual(await page.evaluate(() => document.body.style.overflow), 'hidden', 'closing must release the page scroll lock');
     await showHealth();
-    assert.equal(await page.locator('.core-health-status.healthy').count(), 1, 'completed results must survive closing and reopening');
+    assert.equal(await page.locator('.core-health-status.healthy').count(), 0, 'closing and reopening must reset completed results');
     assert.equal((await probes(page)).length, 1, 'reopening must not launch a check');
     await page.locator('.core-health-backdrop').click({ position: { x: 2, y: 2 } });
     await dialog.waitFor({ state: 'detached' });
@@ -237,7 +237,22 @@ const base = process.env.HOME_DASHBOARD_TEST_BASE_URL || 'http://127.0.0.1:1421'
     await showHealth();
     await awaitIdle(page);
     assert.equal((await probes(page)).length, 5, 'closing must not launch queued model requests');
-    assert.equal(await page.locator('.core-health-status.healthy').count(), 1, 'closing must keep completed results and discard late results');
+    assert.equal(await page.locator('.core-health-status.healthy').count(), 0, 'closing must reset results and discard late results');
+
+    // Reopening immediately while previous in-flight probes are still pending must allow a fresh check without stale pollution.
+    await open();
+    await page.evaluate(() => { window.homeFixture.holdProbes = true; });
+    await checkAll(page).click();
+    await page.waitForFunction(() => window.homeFixture.probeReleases.length === 4);
+    await closeHealth();
+    await showHealth();
+    assert.equal(await checkAll(page).isDisabled(), false, 'reopening must not stay stuck waiting for aborted probes');
+    await page.evaluate(() => { window.homeFixture.holdProbes = false; });
+    await page.getByRole('button', { name: 'Check gpt-5.2-codex', exact: true }).click();
+    await page.locator('.core-health-status.healthy').waitFor();
+    await page.evaluate(() => window.homeFixture.releaseProbes());
+    await awaitIdle(page);
+    assert.equal(await page.locator('.core-health-status.healthy').count(), 1, 'late probes from closed session must not pollute reopened session');
 
     // Non-core external agent config changes must not interrupt or reset open health checks.
     await open();
@@ -332,7 +347,7 @@ const base = process.env.HOME_DASHBOARD_TEST_BASE_URL || 'http://127.0.0.1:1421'
     await timed.clock.runFor(301000);
     assert.equal((await probes(timed)).length, 6, 'the closed dialog must not start another check');
     await showHealth(timed);
-    assert.equal(await timed.locator('.core-health-status.healthy').count(), 6);
+    assert.equal(await timed.locator('.core-health-status.healthy').count(), 0, 'reopening after close must start in reset state');
     await timed.clock.runFor(301000);
     assert.equal((await probes(timed)).length, 6, 'reopening must not schedule another check');
 

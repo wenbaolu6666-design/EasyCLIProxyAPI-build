@@ -61,7 +61,7 @@ export const homeZhCN = {
   'home.health.progress': '已完成 {done} / {total}',
   'home.health.idle': '尚未检测',
   'home.health.summary': '{healthy} 正常 · {failed} 异常 · {unchecked} 未检测',
-  'home.health.hint': '检测会发起真实请求并消耗少量 Token。关闭弹窗将停止后续检测，保留已完成的结果。',
+  'home.health.hint': '检测会发起真实请求并消耗少量 Token。关闭弹窗将停止后续检测并重置检测结果。',
   'home.health.stopped': '已停止，保留已完成的结果',
   'home.health.queued': '等待检测',
 } as const;
@@ -129,7 +129,7 @@ export const homeEn: Record<keyof typeof homeZhCN, string> = {
   'home.health.progress': '{done} / {total} checked',
   'home.health.idle': 'Not checked yet',
   'home.health.summary': '{healthy} healthy · {failed} failed · {unchecked} unchecked',
-  'home.health.hint': 'Checks send real requests and use a small number of tokens. Closing this dialog stops further checks and keeps completed results.',
+  'home.health.hint': 'Checks send real requests and use a small number of tokens. Closing this dialog stops further checks and resets the results.',
   'home.health.stopped': 'Stopped. Completed results are kept.',
   'home.health.queued': 'Queued',
 };
@@ -197,7 +197,7 @@ export const homeJa: Record<keyof typeof homeZhCN, string> = {
   'home.health.progress': '{done} / {total} 件を確認済み',
   'home.health.idle': '未確認',
   'home.health.summary': '正常 {healthy} · 異常 {failed} · 未確認 {unchecked}',
-  'home.health.hint': '確認には実際のリクエストと少量の Token を使用します。ダイアログを閉じると以後の確認を停止し、完了した結果は保持します。',
+  'home.health.hint': '確認には実際のリクエストと少量の Token を使用します。ダイアログを閉じると以後の確認を停止し、結果をリセットします。',
   'home.health.stopped': '停止しました。完了した結果は保持されます。',
   'home.health.queued': '確認待ち',
 };
@@ -265,7 +265,7 @@ export const homePtBR: Partial<Record<keyof typeof homeEn, string>> = {
   'home.health.progress': "{done} de {total} verificados",
   'home.health.idle': "Ainda não verificado",
   'home.health.summary': "{healthy} disponíveis · {failed} com falha · {unchecked} não verificados",
-  'home.health.hint': "As verificações enviam requisições reais e usam alguns tokens. Fechar esta janela interrompe novas verificações e mantém os resultados já concluídos.",
+  'home.health.hint': "As verificações enviam requisições reais e usam alguns tokens. Fechar esta janela interrompe novas verificações e redefine os resultados.",
   'home.health.stopped': "Verificação interrompida. Os resultados concluídos foram mantidos.",
   'home.health.queued': "Na fila",
 };
